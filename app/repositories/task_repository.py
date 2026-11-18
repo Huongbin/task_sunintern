@@ -8,8 +8,10 @@ class TaskRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def get_all(self) -> list[Task]:
-        result = await self.session.execute(select(Task).order_by(Task.id))
+    async def get_all(self, skip: int = 0, limit: int = 20) -> list[Task]:
+        result = await self.session.execute(
+            select(Task).order_by(Task.id).offset(skip).limit(limit)
+        )
         return list(result.scalars().all())
 
     async def get_by_id(self, task_id: int) -> Task | None:

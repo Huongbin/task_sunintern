@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -33,9 +33,11 @@ def health_check() -> HealthResponse:
 @router.get("/tasks", response_model=list[TaskResponse])
 async def get_tasks(
     db: Annotated[AsyncSession, Depends(get_db)],
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=20, ge=1, le=100),
 ) -> list[TaskResponse]:
     repository = TaskRepository(db)
-    tasks = await repository.get_all()
+    tasks = await repository.get_all(skip=skip, limit=limit)
     return [TaskResponse.model_validate(task) for task in tasks]
 
 
