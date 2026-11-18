@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -7,12 +8,14 @@ from fastapi.responses import JSONResponse
 from app.api.routes import router
 from app.config import settings
 
+logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print(f"Starting {settings.app_name}")
+    logger.info("Starting %s", settings.app_name)
     yield
-    print(f"Stopping {settings.app_name}")
+    logger.info("Stopping %s", settings.app_name)
 
 
 app = FastAPI(
