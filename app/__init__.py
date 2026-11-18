@@ -1,0 +1,1 @@
+"""TaskSunIntern FastAPI application."""
