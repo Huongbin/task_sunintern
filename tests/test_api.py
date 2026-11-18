@@ -17,3 +17,10 @@ def test_health() -> None:
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
+def test_not_found() -> None:
+    response = client.get("/missing")
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Not found"}
