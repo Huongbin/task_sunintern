@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.routes import router
 from app.config import settings
+from app.database import engine
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     logger.info("Starting %s", settings.app_name)
     yield
+    await engine.dispose()
     logger.info("Stopping %s", settings.app_name)
 
 
