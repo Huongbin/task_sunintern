@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     debug: bool = False
     log_level: str = "INFO"
     cors_origins: list[str] = ["http://localhost:3000"]
+    database_url: str = "sqlite+aiosqlite:///./task.db"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

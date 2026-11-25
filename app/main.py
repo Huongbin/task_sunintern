@@ -10,6 +10,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.api.routes import router
 from app.config import settings
 from app.constants import Message
+from app.database import engine
 from app.exceptions import AppException
 from app.logging_config import configure_logging
 
@@ -21,6 +22,7 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     logger.info("Starting %s", settings.app_name)
     yield
+    await engine.dispose()
     logger.info("Stopping %s", settings.app_name)
 
 
@@ -57,4 +59,4 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return JSONResponse(status_code=422, content={"detail": exc.errors()})
 
 
-app.include_router(router, prefix="/api/v1", tags=["core"])
+app.include_router(router, prefix="/api/v1", tags=["core", "tasks"])
