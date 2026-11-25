@@ -1,9 +1,9 @@
-from pydantic import BaseModel
+from app.schemas.base import BaseSchema
 
 
-class MessageResponse(BaseModel):
+class MessageResponse(BaseSchema):
     message: str
 
 
-class HealthResponse(BaseModel):
+class HealthResponse(BaseSchema):
     status: str
