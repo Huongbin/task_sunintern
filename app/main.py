@@ -2,13 +2,19 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.routes import router
 from app.config import settings
+from app.constants import Message
 from app.database import engine
+from app.exceptions import AppException
+from app.logging_config import configure_logging
 
+configure_logging(settings.log_level)
 logger = logging.getLogger(__name__)
 
 
@@ -28,16 +34,29 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-@app.exception_handler(404)
-async def not_found_handler(request: Request, exc):
-    return JSONResponse(status_code=404, content={"detail": "Not found"})
+@app.exception_handler(AppException)
+async def app_exception_handler(request: Request, exc: AppException):
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
 
-app.include_router(router)
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    detail = exc.detail
+    if exc.status_code == 404:
+        detail = Message.NOT_FOUND
+    return JSONResponse(status_code=exc.status_code, content={"detail": detail})
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(status_code=422, content={"detail": exc.errors()})
+
+
+app.include_router(router, prefix="/api/v1", tags=["core", "tasks"])

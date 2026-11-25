@@ -1,29 +1,27 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from app.schemas.base import BaseSchema
 
 
-class MessageResponse(BaseModel):
+class MessageResponse(BaseSchema):
     message: str
 
 
-class HealthResponse(BaseModel):
+class HealthResponse(BaseSchema):
     status: str
 
 
-class TaskCreate(BaseModel):
+class TaskCreate(BaseSchema):
     title: str
     description: str | None = None
 
 
-class TaskUpdate(BaseModel):
+class TaskUpdate(BaseSchema):
     title: str
     description: str | None = None
 
 
-class TaskResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
+class TaskResponse(BaseSchema):
     id: int
     title: str
     description: str | None

@@ -1,12 +1,6 @@
-from app.repositories.sample_repository import SampleRepository
+from app.config import settings
 from app.services.app_service import AppService
 
 
-def get_app_name() -> str:
-    from app.config import settings
-
-    return settings.app_name
-
-
 def get_app_service() -> AppService:
-    return AppService(SampleRepository())
+    return AppService(app_name=settings.app_name)

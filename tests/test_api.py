@@ -1,34 +1,35 @@
 from fastapi.testclient import TestClient
 
+from app.config import settings
 from app.main import app
 
 client = TestClient(app)
 
 
 def test_root() -> None:
-    response = client.get("/")
+    response = client.get("/api/v1/")
 
     assert response.status_code == 200
-    assert response.json()["message"] == "TaskSunIntern API is running"
+    assert response.json()["message"] == f"{settings.app_name} is running"
 
 
 def test_health() -> None:
-    response = client.get("/health")
+    response = client.get("/api/v1/health")
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
 
 def test_not_found() -> None:
-    response = client.get("/missing")
+    response = client.get("/api/v1/missing")
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Not found"}
+    assert response.json()["detail"] == "Not found"
 
 
 def test_task_crud() -> None:
     create_response = client.post(
-        "/tasks",
+        "/api/v1/tasks",
         json={"title": "Test task", "description": "Test description"},
     )
     assert create_response.status_code == 201
@@ -36,16 +37,16 @@ def test_task_crud() -> None:
     task = create_response.json()
     task_id = task["id"]
 
-    list_response = client.get("/tasks?skip=0&limit=20")
+    list_response = client.get("/api/v1/tasks?skip=0&limit=20")
     assert list_response.status_code == 200
     assert any(item["id"] == task_id for item in list_response.json())
 
     update_response = client.put(
-        f"/tasks/{task_id}",
+        f"/api/v1/tasks/{task_id}",
         json={"title": "Updated task", "description": "Updated description"},
     )
     assert update_response.status_code == 200
     assert update_response.json()["title"] == "Updated task"
 
-    delete_response = client.delete(f"/tasks/{task_id}")
+    delete_response = client.delete(f"/api/v1/tasks/{task_id}")
     assert delete_response.status_code == 204
