@@ -1,11 +1,19 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.dependencies import get_app_service
+from app.dependencies import get_app_service, get_current_user
+from app.models.user import User
 from app.repositories.task_repository import TaskRepository
+from app.repositories.user_repository import UserRepository
+from app.schemas.auth import (
+    LoginRequest,
+    RegisterRequest,
+    TokenResponse,
+    UserResponse,
+)
 from app.schemas.common import (
     HealthResponse,
     MessageResponse,
@@ -13,9 +21,49 @@ from app.schemas.common import (
     TaskResponse,
     TaskUpdate,
 )
+from app.security import create_access_token, hash_password, verify_password
 from app.services.app_service import AppService
 
 router = APIRouter()
+
+
+@router.post("/auth/register", response_model=UserResponse, status_code=201)
+async def register(
+    data: RegisterRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> User:
+    repository = UserRepository(db)
+
+    if await repository.get_by_email(str(data.email)):
+        raise HTTPException(status_code=400, detail="Email already exists")
+
+    return await repository.create(
+        full_name=data.full_name,
+        email=str(data.email),
+        password_hash=hash_password(data.password),
+    )
+
+
+@router.post("/auth/login", response_model=TokenResponse)
+async def login(
+    data: LoginRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> TokenResponse:
+    user = await UserRepository(db).get_by_email(str(data.email))
+
+    if user is None or not verify_password(data.password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+        )
+
+    token = create_access_token(user.id)
+    return TokenResponse(access_token=token)
+
+
+@router.get("/auth/me", response_model=UserResponse)
+async def get_me(current_user: Annotated[User, Depends(get_current_user)]) -> User:
+    return current_user
 
 
 @router.get("/", response_model=MessageResponse)
