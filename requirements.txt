@@ -7,3 +7,6 @@ ruff==0.11.13
 sqlalchemy==2.0.41
 aiosqlite==0.21.0
 alembic==1.16.1
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.5.0
+email-validator==2.3.0
